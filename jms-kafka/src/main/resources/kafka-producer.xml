@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+	<!-- 注解扫描 -->
+	<context:annotation-config />
+	 <!--生产者实现类 -->
+	<bean class="com.jianzhang.jms.message.service.queue.KafkaSendMessageServiceImpl" />
+	<!-- 定义producer的参数 -->
+	<bean id="producerProperties" class="java.util.HashMap">
+		<constructor-arg>
+			<map>
+				<!-- 配置kafka的broker,集群的话多个之间用逗号隔开 -->
+				<entry key="bootstrap.servers"
+					value="192.168.127.128:9092,192.168.127.129:9092,192.168.127.130:9092" />
+				<!-- 配置组：生产者和消费者不能在同一个组 -->
+				<entry key="group.id" value="group1" />
+				<entry key="acks" value="all" />
+				<entry key="retries" value="10" />
+				<entry key="batch.size" value="16384" />
+				<entry key="linger.ms" value="1" />
+				<entry key="buffer.memory" value="33554432" />
+				<!-- 序列化配置 -->
+				<entry key="key.serializer"
+					value="org.apache.kafka.common.serialization.StringSerializer" />
+				<entry key="value.serializer"
+					value="org.apache.kafka.common.serialization.StringSerializer" />
+			</map>
+		</constructor-arg>
+	</bean>
+
+	<!-- 创建kafkatemplate需要使用的producerfactory bean -->
+	<bean id="producerFactory"
+		class="org.springframework.kafka.core.DefaultKafkaProducerFactory">
+		<constructor-arg>
+			<ref bean="producerProperties" />
+		</constructor-arg>
+	</bean>
+
+	<!-- 创建kafkatemplate bean，使用的时候，只需要注入这个bean，即可使用template的send消息方法 -->
+	<bean id="kafkaTemplate" class="org.springframework.kafka.core.KafkaTemplate">
+		<constructor-arg ref="producerFactory" />
+		<constructor-arg name="autoFlush" value="true" />
+		<property name="defaultTopic" value="kafka_demo" />
+		<property name="producerListener" ref="producerListener" />
+	</bean>
+	<bean id="producerListener"
+		class="com.jianzhang.jms.message.service.queue.KafkaProducerListener" />
+</beans>

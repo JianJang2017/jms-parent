@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+	<!-- 注解扫描 -->
+	<context:annotation-config />
+	<!-- 消费者端配置 start -->
+	<!-- 1、获取连接工厂配置方式1 -->
+	<!-- 真正可以产生Connection的ConnectionFactory，由对应的 JMS服务厂商提供 -->
+	<!-- <bean id="targetConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+		<property name="brokerURL" value="tcp://localhost:61616" />
+	</bean> -->
+	<!-- Spring用于管理真正的ConnectionFactory的ConnectionFactory -->
+	<!-- <bean id="connectionFactory"
+		class="org.springframework.jms.connection.SingleConnectionFactory">
+		目标ConnectionFactory对应真实的可以产生JMS Connection的ConnectionFactory
+		<property name="targetConnectionFactory" ref="targetConnectionFactory" />
+	</bean> -->
+	<!-- 2、使用pool进行链接 -->
+	<!-- 真正可以产生Connection的ConnectionFactory，由对应的 JMS服务厂商提供 -->
+	<bean id="targetConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+	<property name="brokerURL" value="failover:tcp://localhost:61616"/>
+	<!-- 信任所有的包 -->
+	<property name="trustAllPackages" value="true"/>
+	</bean>
+
+	<bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory">
+	<property name="connectionFactory" ref="targetConnectionFactory"/>
+	<property name="maxConnections" value="10"/>
+	</bean>
+
+	<bean id="connectionFactory" class="org.springframework.jms.connection.SingleConnectionFactory">
+	<property name="targetConnectionFactory" ref="pooledConnectionFactory"/>
+	</bean>
+	<!-- 消息转换器定义 -->
+	<bean id="studentMessageConverter" class="com.jianzhang.jms.message.converter.StudentMessageConverter"/>
+	
+	<!--这个是队列目的地 -->
+	<bean id="queueDestination" class="org.apache.activemq.command.ActiveMQQueue">
+		<constructor-arg value="queue-test" />
+	</bean>
+	<!-- 消息监听器 -->
+  <!--   <bean id="consumerMessageListener"
+        class="com.jianzhang.jms.message.service.queue.ConsumerMessageListener" /> -->
+    <bean id="studentMessageListener" class="com.jianzhang.jms.message.service.queue.StudentMessageListener"/>
+    <!-- 消息监听器 适配器 -->
+	<bean id="messageListenerAdapter"
+		class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+		<property name="delegate" ref="studentMessageListener" />
+		<property name="defaultListenerMethod" value="receiveMessage" />
+		<property name="messageConverter" ref="studentMessageConverter" />
+	</bean>
+    <!-- 消息监听容器 -->
+    <bean id="jmsContainer"
+        class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="connectionFactory" />
+        <property name="acceptMessagesWhileStopping" value="true" />
+        <property name="destination" ref="queueDestination" />
+        <property name="messageListener" ref="messageListenerAdapter" />
+    </bean>
+</beans>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-kafka="http://www.springframework.org/schema/integration/kafka"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/integration/kafka http://www.springframework.org/schema/integration/kafka/spring-integration-kafka.xsd
+        http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+	<!-- 注解扫描 -->
+	<!-- <context:annotation-config /> -->	<!-- 定义consumer的参数 -->
+	<bean id="consumerProperties" class="java.util.HashMap">
+		<constructor-arg>
+			<map>
+				<!-- 配置kafka的broker -->
+				<!-- 集群配置，多个broker之间用都号隔开 -->
+				<entry key="bootstrap.servers"
+					value="192.168.127.128:9092,192.168.127.129:9092,192.168.127.130:9092" />
+				<!-- 配置组 -->
+				<entry key="group.id" value="group3" />
+				<entry key="enable.auto.commit" value="true" />
+				<entry key="auto.commit.interval.ms" value="1000" />
+				<entry key="session.timeout.ms" value="30000" />
+				<!-- earliest 当各分区下有已提交的offset时，从提交的offset开始消费；无提交的offset时，从头开始消费-->
+				<!--latest 当各分区下有已提交的offset时，从提交的offset开始消费；无提交的offset时，消费新产生的该分区下的数据-->
+				<!-- none topic各分区都存在已提交的offset时，从offset后开始消费；只要有一个分区不存在已提交的offset，则抛出异常 -->
+				<entry key="auto.offset.reset" value="earliest" />
+				<!-- 序列化配置 -->
+				<entry key="key.deserializer"
+					value="org.apache.kafka.common.serialization.StringDeserializer" />
+				<entry key="value.deserializer"
+					value="org.apache.kafka.common.serialization.StringDeserializer" />
+			</map>
+		</constructor-arg>
+	</bean>
+
+	<!-- 创建consumerFactory bean -->
+	<bean id="consumerFactory"
+		class="org.springframework.kafka.core.DefaultKafkaConsumerFactory">
+		<constructor-arg>
+			<ref bean="consumerProperties" />
+		</constructor-arg>
+	</bean>
+
+	<!-- 实际执行消息消费的类 -->
+	<bean id="messageListernerConsumerService"
+		class="com.jianzhang.jms.message.service.queue.ConsumerListener" />
+
+	<!-- 消费者容器配置信息 -->
+	<bean id="containerProperties"
+		class="org.springframework.kafka.listener.config.ContainerProperties">
+		<!-- 重要！配置topic -->
+		<constructor-arg value="kafka_demo" />
+		<property name="messageListener" ref="messageListernerConsumerService" />
+	</bean>
+
+
+	<bean id="messageListenerContainer"
+		class="org.springframework.kafka.listener.KafkaMessageListenerContainer"
+		init-method="doStart">
+		<constructor-arg ref="consumerFactory" />
+		<constructor-arg ref="containerProperties" />
+	</bean>
+</beans>
