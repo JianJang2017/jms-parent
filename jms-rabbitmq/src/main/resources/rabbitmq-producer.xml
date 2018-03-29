@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit-1.6.xsd">
+
+	<!-- 注解扫描 -->
+	<context:component-scan base-package="com.jianzhang.jms.message">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+
+	<!-- 配置ConnectionFactory -->
+	<rabbit:connection-factory id="connectionFactory"
+		host="192.168.127.128" username="guest" password="guest" port="5672" />
+
+	<!-- 等同new一个RabbitAdmin -->
+	<rabbit:admin connection-factory="connectionFactory" />
+
+	<!-- 声明一个队列 -->
+	<rabbit:queue name="myQueue" />
+
+	<!-- 声明一个topic类型的exchange，并把上面声明的队列绑定在上面，routingKey="foo.*" -->
+	<rabbit:topic-exchange name="myExchange">
+		<rabbit:bindings>
+			<rabbit:binding queue="myQueue" pattern="foo.*" />
+			<!-- 这里还可以继续绑定其他队列 -->
+		</rabbit:bindings>
+	</rabbit:topic-exchange>
+
+	<!-- 声明一个rabbitTemplate，指定连接信息，发送消息到myExchange上，routingKey在程序中设置，此处的配置在程序中可以用set修改 -->
+	<rabbit:template id="rabbitTemplate"
+		connection-factory="connectionFactory" exchange="myExchange" />
+</beans>

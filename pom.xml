@@ -10,6 +10,7 @@
 	<modules>
 		<module>jms-activemq</module>
 		<module>jms-kafka</module>
+		<module>jms-rabbitmq</module>
 	</modules>
 	<properties>
 		<java.version>1.7</java.version>

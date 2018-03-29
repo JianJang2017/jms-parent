@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit-1.6.xsd">
+	<!-- 注解扫描 -->
+	<context:component-scan
+		base-package="com.jianzhang.jms.message.service.queue.listener">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	<!-- 配置ConnectionFactory -->
+	<rabbit:connection-factory id="connectionFactory"
+		host="192.168.127.128" username="guest" password="guest" port="5672" />
+
+	<!-- 等同new一个RabbitAdmin -->
+	<rabbit:admin connection-factory="connectionFactory" />
+
+	<!-- 声明一个队列 -->
+	<rabbit:queue name="myQueue" />
+	<!-- 配置监听容器，指定消息处理类，处理方法，还可以配置自动确认等 -->
+	<rabbit:listener-container
+		connection-factory="connectionFactory">
+		<!-- 队列中的消息，配置多个监听，只能有一个能够接收到消息，保证消息不会被重复消费 -->
+		<rabbit:listener ref="myListener" method="listen"
+			queue-names="myQueue" />
+		<rabbit:listener ref="myListener2" method="listen"
+			queue-names="myQueue" />
+		<!-- 可以继续注册监听 -->
+	</rabbit:listener-container>
+
+</beans>
