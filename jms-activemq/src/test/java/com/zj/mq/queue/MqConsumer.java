@@ -3,13 +3,9 @@ package com.zj.mq.queue;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
 import javax.jms.Session;
-import javax.jms.TextMessage;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
@@ -21,7 +17,7 @@ public class MqConsumer {
 	/**
 	 * 服务地址
 	 */
-	private final static String URL = "tcp://192.168.11.225:61616";
+	private final static String URL = "tcp://192.168.127.128:61616";
 
 	private final static String DESTINATION_QUEUE = "zjtest";
 
@@ -49,7 +45,20 @@ public class MqConsumer {
 		// MessageConsumer：消息接收者
 		MessageConsumer consumer = session.createConsumer(destination);
 		// 7、设置消息监听器
-		consumer.setMessageListener(new MessageListener() {
+		//同步接收
+		while(true){
+			//设置接收者接收消息的时间，为了便于测试，这里定为 100s
+			Message message = consumer.receive(100000);
+			if (message != null) {
+			System.out.println(message.toString());
+			} else {
+			//超时结束
+			break;
+			}
+		}
+		
+		//异步接收
+	/*	consumer.setMessageListener(new MessageListener() {
 			@Override
 			public void onMessage(Message message) {
 				TextMessage textMessage = (TextMessage) message;
@@ -60,7 +69,7 @@ public class MqConsumer {
 				}
 
 			}
-		});
+		});*/
 
 	}
 
