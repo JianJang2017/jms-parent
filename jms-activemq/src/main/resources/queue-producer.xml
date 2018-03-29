@@ -21,7 +21,7 @@
 	<!-- 2、使用pool进行链接 -->
 	<!-- 真正可以产生Connection的ConnectionFactory，由对应的 JMS服务厂商提供 -->
 	<bean id="targetConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
-	<property name="brokerURL" value="failover:tcp://localhost:61616"/>
+	<property name="brokerURL" value="failover:tcp://192.168.127.128:61616"/>
 	<!-- 信任所有的包 -->
 	<property name="trustAllPackages" value="true"/>
 	</bean>
