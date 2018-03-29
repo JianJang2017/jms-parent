@@ -17,17 +17,17 @@ public class TestJmsQueueProducer {
 		ClassPathXmlApplicationContext ac = new ClassPathXmlApplicationContext("queue-producer.xml");
 		ProducerService pService = ac.getBean(ProducerServiceImpl.class);
 		Student student = null;
-		for (int i = 0; i < 10; i++) {
+	/*	for (int i = 0; i < 10; i++) {
 			student = new Student();
 			student.setSno(20171112);
 			student.setName("消息:" + i);
 			student.setEmail("zhangsan@jj.com");
 			student.setRegisterTime(new Date());
 			pService.sendMessage(student);
-		}
-		/*for (int i = 0; i <10; i++) {
-			pService.sendMessage("文本消息："+i);
 		}*/
+		for (int i = 0; i <10; i++) {
+			pService.sendMessage("文本消息："+i);
+		}
 		// 关闭上下文
 		ac.close();
 	}
